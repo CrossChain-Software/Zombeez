@@ -63,7 +63,7 @@ body = {
     'ZOMBEE': 0.2
 }
 
-clothing = {
+clothes = {
     'BROWN HOODIE': 0.4,
     'GRAY HOODIE': 0.4,
     'HAWAIIN SHIRT': 0.05,
