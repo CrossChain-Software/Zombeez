@@ -1,0 +1,138 @@
+background = {
+    'BEACH': 'zombeez_assets/Background_Beach.png',
+    'BLUE': 'zombeez_assets/Background_Blue.png',
+    'DARK GREEN': 'zombeez_assets/Background_Dark_Green.png',
+    'EGGSHELL': 'zombeez_assets/Background_Eggshell.png',
+    'GRAVEYARD': 'zombeez_assets/Background_Graveyard.png',
+    'GREEN': 'zombeez_assets/Background_Green.png',
+    'GREY': 'zombeez_assets/Background_Grey.png',
+    'LIGHT GREY': 'zombeez_assets/Background_Light_Grey.png',
+    'NYC': 'zombeez_assets/Background_NYC.png',
+    'ORANGE': 'zombeez_assets/Background_Orange.png',
+    'PINK': 'zombeez_assets/Background_Pink.png',
+    'PURPLE': 'zombeez_assets/Background_Purple.png',
+    'RED': 'zombeez_assets/Background_Red.png',
+    'SPACE': 'zombeez_assets/Background_Space.png',
+    'WHACKDONALDS': 'zombeez_assets/Background_Whackdonalds.png',
+}
+
+accessory = {
+    'BLUSH': 'zombeez_assets/Accessory_Blush.png',
+    'BRIEFCASE': 'zombeez_assets/Accessory_Briefcase.png',
+    'BROOMSTICK': 'zombeez_assets/Accessory_Broomstick.png',
+    'CHILDREN': 'zombeez_assets/Accessory_Children.png',
+    'CHOCOLATE SHAKE': 'zombeez_assets/Accessory_Chocolate_Shake.png',
+    'EXPLORER': 'zombeez_assets/Accessory_Explorer.png',
+    'GOLD CHAIN': 'zombeez_assets/Accessory_Gold_Chain.png',
+    'GUN': 'zombeez_assets/Accessory_Gun.png',
+    'JAMS': 'zombeez_assets/Accessory_Jams.png',
+    'LIGHTSABER': 'zombeez_assets/Accessory_Lightsaber.png',
+    'ON FIRE': 'zombeez_assets/Accessory_On_Fire.png',
+    'ROCKET': 'zombeez_assets/Accessory_Rocket.png',
+    'SLIME': 'zombeez_assets/Accessory_Slime.png',
+    'SOCKS': 'zombeez_assets/Accessory_Socks.png',
+    'LUMPS': 'zombeez_assets/Accessory_Toxic_Lumps.png',
+    'WATCH': 'zombeez_assets/Accessory_Watch.png',
+    'BAG': 'zombeez_assets/Accessory_Bag.png',
+    'NONE': ''
+}
+
+body = {
+    'ALBINO': 'zombeez_assets/Body_Albino.png',
+    'ALIEN': 'zombeez_assets/Body_Alien.png',
+    'BEEBOT': 'zombeez_assets/Body_BeeBot.png',
+    'BZZENDZA': 'zombeez_assets/Body_Beezenda.png',
+    'BLUE CAT': 'zombeez_assets/Body_Blue_Cat.png',
+    'CHIMP': 'zombeez_assets/Body_Chimp.png',
+    'DOG': 'zombeez_assets/Body_Dog.png',
+    'DRAGON': 'zombeez_assets/Body_Dragon.png',
+    'GARGOYLE': 'zombeez_assets/Body_Gargoyle.png',
+    'GHOST': 'zombeez_assets/Body_Ghost.png',
+    'GOLD': 'zombeez_assets/Body_Gold_Bee.png',
+    'GRAYSCALE': 'zombeez_assets/Body_Grayscale.png',
+    'GREMPLIN GREEN': 'zombeez_assets/Body_Gremplin_Green.png',
+    'GUMMY': 'zombeez_assets/Body_Gummy.png',
+    'NEW WAVE': 'zombeez_assets/Body_New_Wave.png',
+    'ORANGE': 'zombeez_assets/Body_Orange.png',
+    'SKELETON GHOST': 'zombeez_assets/Body_Skeleton_Ghost.png',
+    'SKELETON ': 'zombeez_assets/Body_Skeleton.png',
+    'SLEEPY': 'zombeez_assets/Body_Sleepy.png',
+    'SLIME': 'zombeez_assets/Body_Slime.png',
+    'TRIPPY': 'zombeez_assets/Body_Trippy.png',
+    'ZOMBEE': 'zombeez_assets/Body_Zombee.png'
+}
+
+clothes = {
+    'BROWN HOODIE': 'zombeez_assets/Clothes_Brown_Hoodie.png',
+    'GRAY HOODIE': 'zombeez_assets/Clothes_Gray_Hoodie.png',
+    'HAWAIIN SHIRT': 'zombeez_assets/Clothes_Hawaiin.png',
+    'TIE': 'zombeez_assets/Clothes_Tie.png'
+}
+
+eyes = {
+    '3D GLASSES': 'zombeez_assets/Eyes_3D_Glasses.png',
+    'ANIME': 'zombeez_assets/Eyes_Anime_Eyes.png',
+    'BLU EYESHADOW': 'zombeez_assets/Eyes_Blue_Eyeshadow.png',
+    'BUTTHOLE': 'zombeez_assets/Eyes_Butthole.png',
+    'DIALATED': 'zombeez_assets/Eyes_Dialated_Eyes.png',
+    'GLOWING BLU': 'zombeez_assets/Eyes_Glowing_Blue.png',
+    'GLOWING RED': 'zombeez_assets/Eyes_Glowing_Red.png',
+    'GOLD GLASSES': 'zombeez_assets/Eyes_Gold_Specs.png',
+    'GREMPLIN': 'zombeez_assets/Eyes_Gremplin.png',
+    'JUDGEMENT': 'zombeez_assets/Eyes_Judgement_Eyes.png',
+    'MONOCLE': 'zombeez_assets/Eyes_Monocle.png',
+    'NOUNISH BLUE': 'zombeez_assets/Eyes_Nounish_Blue.png',
+    'PURPLE GOGGLES': 'zombeez_assets/Eyes_Purple_Goggles.png',
+    'RED LASER': 'zombeez_assets/Eyes_Red_Laser.png',
+    'SUNGLASSES': 'zombeez_assets/Eyes_Sunglasses.png',
+    'THICK ROUND': 'zombeez_assets/Eyes_Thick_Round.png',
+    'UNDEAD EYES': 'zombeez_assets/Eyes_Undead_Eyes.png'
+}
+
+head = {
+    'CROWN': 'zombeez_assets/Head_King_Crown.png',
+    'ANON MASK': 'zombeez_assets/Head_Anon_Mask.png',
+    'AQUA MOHAWK': 'zombeez_assets/Head_Aqua_Mohawk.png',
+    'BASEBALL CAP GREEN': 'zombeez_assets/Head_Baseball_Cap_Green.png',
+    'BASEBALL CAP': 'zombeez_assets/Head_Baseball_Cap.png',
+    'BOWL HEAD': 'zombeez_assets/Head_Bowl_Head.png',
+    'BRAIN': 'zombeez_assets/Head_Brain.png',
+    'COWBOY HAT': 'zombeez_assets/Head_Cowboy_Hat.png',
+    'EARRING': 'zombeez_assets/Head_Earring.png',
+    'FEZ': 'zombeez_assets/Head_Fez.png',
+    'FROG': 'zombeez_assets/Head_Frog_Hat.png',
+    'JASON MASK': 'zombeez_assets/Head_Jason_Mask.png',
+    'MCDONALDS HAT': 'zombeez_assets/Head_McDonalds_Hat.png',
+    'ORANGE BEANIE': 'zombeez_assets/Head_Orange_Beanie.png',
+    'ORANGE POOF': 'zombeez_assets/Head_Orange_Poof.png',
+    'PIGTAILS': '/zombeez_assets/Head_Pigtails.png',
+    'RAINBOW MOHAWK': 'zombeez_assets/Head_Rainbow_Mohawk.png',
+    'RED GNOME': 'zombeez_assets/Head_Red_Gnome.png',
+    'SKI MASK': 'zombeez_assets/Head_Ski_Mask.png',
+    'STRINGY WHITE': 'zombeez_assets/Head_Stringy_White.png',
+    'SUPER SAYAIN': 'zombeez_assets/Head_Super_Sayain.png',
+    'TOADSTOOL': 'zombeez_assets/Head_Toadstool.png',
+    'TOP HAT': 'zombeez_assets/Head_Top_Hat.png',
+    'WILD WHITE HAIR': 'zombeez_assets/Head_Wild_White_Hair.png',
+    'WILD ORANGE': 'zombeez_assets/Head_Wild_Orange.png'
+}
+
+mouth = {
+    'BANDIT WIDE': 'zombeez_assets/Mouth_Bandit_Wide.png',
+    'BLUNT': 'zombeez_assets/Mouth_Blunt.png',
+    'BUBBLE GUM ': 'zombeez_assets/Mouth_Bubble_Gum.png',
+    'BUCKTOOTH': 'zombeez_assets/Mouth_Bucktooth.png',
+    'CROAK': 'zombeez_assets/Mouth_Croak.png',
+    'FIRE': 'zombeez_assets/Mouth_Fire.png',
+    'LINCOLN MOUTH': 'zombeez_assets/Mouth_Lincoln_Mouth.png',
+    'PIPE': 'zombeez_assets/Mouth_Pipe.png',
+    'PURPLE WIDE': 'zombeez_assets/Mouth_Purple_Wide.png',
+    'RIBBIT BLUE': 'zombeez_assets/Mouth_Ribbit_Blue.png',
+    'SAD': 'zombeez_assets/Mouth_Sad.png',
+    'SHIFTY': 'zombeez_assets/Mouth_Shifty.png',
+    'SMALL CIG': 'zombeez_assets/Mouth_Small_Cig.png',
+    'TEETH': 'zombeez_assets/Mouth_Teeth.png',
+    'VAMPIRE': 'zombeez_assets/Mouth_Vampire.png',
+    'WAZZAAP': 'zombeez_assets/Mouth_Wazzaup.png',
+    'WELL ACTUALLY': 'zombeez_assets/Mouth_Well_Actually.png'
+}
