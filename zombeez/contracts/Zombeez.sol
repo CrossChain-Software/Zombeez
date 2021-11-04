@@ -7,8 +7,22 @@ import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
 
-contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
+
+contract MerkleProofVerify {
+    function verify(bytes32[] memory proof, bytes32 root)
+        public
+        view
+        returns (bool)
+    {
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+
+        return MerkleProof.verify(proof, root, leaf);
+    }
+}
+
+contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleProofVerify {
 
     event PurchasedNFT (address indexed buyer, uint256 startWith, uint256 batch);
 
@@ -21,6 +35,8 @@ contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
     uint256 public price = 0.03 * 10**18; // 0.08 eth
     string public baseURI;
     bool private started;
+    bool public whitelistEnabled = true;
+    bytes32 public immutable override merkleRoot;
 
     address private core1Address; // dev1: 0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2
     uint256 private core1Shares;
@@ -45,8 +61,9 @@ contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf
     ];
 
-    constructor(_baseURI, _addresses, _shares) ERC721(name, symbol) {
+    constructor(_baseURI, _addresses, _shares, _merkleroot) ERC721(name, symbol) {
         baseURI = _baseURI;
+        merkleRoot = _merkleroot;
 
         deployerWallet = payable(msg.sender);
         
@@ -75,8 +92,13 @@ contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable {
         started = _start;
     }
 
+    function toggleWhitelist() onlyOwner {
+        whitelistEnabled = !whitelistEnabled;
+    }
+
     function purchaseNFT(uint256 _batchCount) payable public {
         require(started, "Sale has not started");
+        require(verify(msg.sender), "Not included on the whitelist");
         require(_batchCount > 0 && _batchCount <= maxBatch, "Batch purchase limit exceeded");
         require(totalMinted + _batchCount <= totalCount, "Not enough inventory");
         require(msg.value == _batchCount * price, "Invalid value sent");
