@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.7;
 pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -7,22 +7,22 @@ import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 
-contract MerkleProofVerify {
-    function verify(bytes32[] memory proof, bytes32 root)
-        public
-        view
-        returns (bool)
-    {
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+//contract MerkleProofVerify {
+//    function verify(bytes32[] memory proof, bytes32 root)
+//        public
+//        view
+//        returns (bool)
+//    {
+//        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+//
+//        return MerkleProof.verify(proof, root, leaf);
+//    }
+//}
 
-        return MerkleProof.verify(proof, root, leaf);
-    }
-}
-
-contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleProofVerify {
+contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleProof {
 
     event PurchasedNFT (address indexed buyer, uint256 startWith, uint256 batch);
 
@@ -33,10 +33,8 @@ contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleP
     uint256 public totalCount = 10000;
     uint256 public maxBatch = 50;
     uint256 public price = 0.03 * 10**18; // 0.08 eth
-    string public baseURI;
     bool private started;
     bool public whitelistEnabled = true;
-    bytes32 public immutable override merkleRoot;
 
     address private core1Address; // dev1: 0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2
     uint256 private core1Shares;
@@ -51,8 +49,8 @@ contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleP
     uint256 private core4Shares;
 
 
-    string name = 'Zombeez';
-    string symbol = 'ZOMB';
+    string public name = 'Zombeez';
+    string public symbol = 'ZOMB';
 
     address[] internal coreAddresses = [
         0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2,
@@ -60,10 +58,31 @@ contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleP
         0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF,
         0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf
     ];
+    
+    uint256[] internal coreShares = [
+        20000,
+        20000,
+        20000,
+        40000
+    ];
 
-    constructor(_baseURI, _addresses, _shares, _merkleroot) ERC721(name, symbol) {
+    constructor(string memory baseURI,
+                address[] memory addresses,
+                uint256[] memory shares,
+                bytes32 memory merkleRoot
+        ) 
+        ERC721(name, symbol) {
         baseURI = _baseURI;
-        merkleRoot = _merkleroot;
+        
+        core1Address = addresses[0];
+        core2Address = addresses[1];
+        core3Address = addresses[2];
+        core4Address = addresses[3];
+
+        core1Shares = shares[0];
+        core2Shares = shares[1];
+        core3Shares = shares[2];
+        core4Shares = shares[3];
 
         deployerWallet = payable(msg.sender);
         
@@ -73,11 +92,11 @@ contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleP
     }
 
     function _baseURI() internal view virtual override returns (string memory){
-        return baseURI;
+        return _baseURI;
     }
 
     function setBaseURI(string memory _newURI) public onlyOwner {
-        baseURI = _newURI;
+        _baseURI = _newURI;
     }
 
     function changePrice(uint256 _newPrice) public onlyOwner {
@@ -92,13 +111,21 @@ contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleP
         started = _start;
     }
 
-    function toggleWhitelist() onlyOwner {
+    function whitelistOnly() public onlyOwner {
         whitelistEnabled = !whitelistEnabled;
+    }
+    
+    function verifyWhitelist(bytes32[] memory proof, bytes32 root) public view returns (bool) {
+        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
+        return MerkleProof.verify(proof, root, leaf);
     }
 
     function purchaseNFT(uint256 _batchCount) payable public {
+        if (whitelistEnabled) {
+            // TODO: Something jacked here
+            require(verifyWhitelist(msg.sender, merkleRoot), "Not included on the whitelist");
+        }
         require(started, "Sale has not started");
-        require(verify(msg.sender), "Not included on the whitelist");
         require(_batchCount > 0 && _batchCount <= maxBatch, "Batch purchase limit exceeded");
         require(totalMinted + _batchCount <= totalCount, "Not enough inventory");
         require(msg.value == _batchCount * price, "Invalid value sent");
@@ -122,11 +149,11 @@ contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleP
     function distroDust() public {
         walletDistro();
         uint256 contract_balance = address(this).balance;
-        require(payable(wallet).send(contract_balance));
+        require(payable(deployerWallet).send(contract_balance));
     }
 
     function changeWallet(address payable _newWallet) external onlyOwner {
-        wallet = _newWallet;
+        deployerWallet = _newWallet;
     }
 
     function walletInventory(address _owner) external view returns (uint256[] memory) {
