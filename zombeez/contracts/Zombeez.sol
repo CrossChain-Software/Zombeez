@@ -1,225 +1,293 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import '@openzeppelin/contracts/access/Ownable.sol';
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import '@openzeppelin/contracts/utils/Counters.sol';
 
 
-//contract MerkleProofVerify {
-//    function verify(bytes32[] memory proof, bytes32 root)
-//        public
-//        view
-//        returns (bool)
-//    {
-//        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-//
-//        return MerkleProof.verify(proof, root, leaf);
-//    }
-//}
+contract Zombeez is ERC721, ERC721Enumerable, Ownable {
+    using SafeMath for uint;
+    using Strings for uint;
+    using Address for address;
+    using Counters for Counters.Counter;
 
-contract Zombeez is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, MerkleProof {
-
-    event PurchasedNFT (address indexed buyer, uint256 startWith, uint256 batch);
-
-    address payable public deployerWallet;
-
-    uint256 public totalMinted;
-    uint256 public burnCount;
-    uint256 public totalCount = 10000;
-    uint256 public maxBatch = 50;
-    uint256 public price = 0.03 * 10**18; // 0.08 eth
-    bool private started;
-    bool public whitelistEnabled = true;
-
-    address private core1Address; // dev1: 0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2
-    uint256 private core1Shares;
+    // Constants
+    uint256 public constant MAX_TOKENS = 5000;
+    uint256 public constant RESERVED_TOKENS = 100;
     
-    address private core2Address; // dev2: 0x29c36265c63fE0C3d024b2E4d204b49deeFdD671
-    uint256 private core2Shares;
+    // Prices and max amount allowed to mint
+    uint256 public presalePrice;
+    uint256 public publicPrice;
+    uint256 public maxPresaleMint;
+    uint256 public maxMint;
+    uint256 public maxPerMint;
     
-    address private core3Address; // artist1: 0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF
-    uint256 private core3Shares;
+    // Set starting index and provenance
+    uint256 public startingIndexBlock;
+    uint256 public startingIndex;
+    string public provenance;
     
-    address private core4Address; // artist2: 0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf
-    uint256 private core4Shares;
-
-
-    string public name = 'Zombeez';
-    string public symbol = 'ZOMB';
-
-    address[] internal coreAddresses = [
-        0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2,
-        0x29c36265c63fE0C3d024b2E4d204b49deeFdD671,
-        0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF,
-        0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf
-    ];
+    // Setup for 4 contributors
+    address[4] private _shareholders;
+    uint[4] private _shares;
+    uint256 private constant baseMod = 100000;
+ 
+    // Keep track of how many minted
+    Counters.Counter private _tokenIds;
+    uint256 public reservedClaimed;
+    uint256 public numTokensMinted;
     
-    uint256[] internal coreShares = [
-        20000,
-        20000,
-        20000,
-        40000
-    ];
+    // URI / IPFS 
+    string private _baseURIPrefix;
+    string private _baseExtension = ".json";
 
-    constructor(string memory baseURI,
-                address[] memory addresses,
-                uint256[] memory shares,
-                bytes32 memory merkleRoot
-        ) 
-        ERC721(name, symbol) {
-        baseURI = _baseURI;
-        
-        core1Address = addresses[0];
-        core2Address = addresses[1];
-        core3Address = addresses[2];
-        core4Address = addresses[3];
-
-        core1Shares = shares[0];
-        core2Shares = shares[1];
-        core3Shares = shares[2];
-        core4Shares = shares[3];
-
-        deployerWallet = payable(msg.sender);
-        
-        for(uint256 i=0; i< 10; i++){
-            _mint(_msgSender(), 1 + totalMinted++);
-        }
-    }
-
-    function _baseURI() internal view virtual override returns (string memory){
-        return _baseURI;
-    }
-
-    function setBaseURI(string memory _newURI) public onlyOwner {
-        _baseURI = _newURI;
-    }
-
-    function changePrice(uint256 _newPrice) public onlyOwner {
-        price = _newPrice;
-    }
-
-    function setTokenURI(uint256 _tokenId, string memory _tokenURI) public onlyOwner {
-        _setTokenURI(_tokenId, _tokenURI);
-    }
-
-    function setStart(bool _start) public onlyOwner {
-        started = _start;
-    }
-
-    function whitelistOnly() public onlyOwner {
-        whitelistEnabled = !whitelistEnabled;
-    }
+    // Turning on and off minting / presale / publicsale
+    bool public mintingEnabled; 
+    bool public publicSaleStarted;
+    bool public presaleStarted;
     
-    function verifyWhitelist(bytes32[] memory proof, bytes32 root) public view returns (bool) {
-        bytes32 leaf = keccak256(abi.encodePacked(msg.sender));
-        return MerkleProof.verify(proof, root, leaf);
-    }
+    // Mappings for whitelist and tracking mints per wallet
+    mapping(address => bool) private _presaleEligible;
+    mapping(address => uint256) private _totalClaimed;
 
-    function purchaseNFT(uint256 _batchCount) payable public {
-        if (whitelistEnabled) {
-            // TODO: Something jacked here
-            require(verifyWhitelist(msg.sender, merkleRoot), "Not included on the whitelist");
-        }
-        require(started, "Sale has not started");
-        require(_batchCount > 0 && _batchCount <= maxBatch, "Batch purchase limit exceeded");
-        require(totalMinted + _batchCount <= totalCount, "Not enough inventory");
-        require(msg.value == _batchCount * price, "Invalid value sent");
-        
+    // Events to emit
+    event PaymentReleased(address to, uint256 amount);
+    event BaseURIChanged(string baseURI);
+    event ReservedMint(address minter, uint256 amount);
+    event PresaleMint(address minter, uint256 amount);
+    event PublicSaleMint(address minter, uint256 amount);
 
-        emit PurchasedNFT(_msgSender(), totalMinted+1, _batchCount);
-        for(uint256 i=0; i< _batchCount; i++){
-            _mint(_msgSender(), 1 + totalMinted++);
-        }
-    }
-
-    function walletDistro() public {
-        uint256 contract_balance = address(this).balance;
-        //require(payable(wallet).send(contract_balance));
-        require(payable(core1Address).send( (contract_balance * core1Shares) / 1000));
-        require(payable(core2Address).send( (contract_balance * core2Shares) / 1000));
-        require(payable(core3Address).send( (contract_balance * core3Shares) / 1000));
-        require(payable(core4Address).send( (contract_balance * core4Shares) / 1000));
-    }
-    
-    function distroDust() public {
-        walletDistro();
-        uint256 contract_balance = address(this).balance;
-        require(payable(deployerWallet).send(contract_balance));
-    }
-
-    function changeWallet(address payable _newWallet) external onlyOwner {
-        deployerWallet = _newWallet;
-    }
-
-    function walletInventory(address _owner) external view returns (uint256[] memory) {
-        uint256 tokenCount = balanceOf(_owner);
-
-        uint256[] memory tokensId = new uint256[](tokenCount);
-        for (uint256 i = 0; i < tokenCount; i++) {
-            tokensId[i] = tokenOfOwnerByIndex(_owner, i);
-        }
-
-        return tokensId;
-    }
-
-    /**
-   * Override isApprovedForAll to auto-approve OS's proxy contract
-   */
-    function isApprovedForAll(
-        address _owner,
-        address _operator
-    ) public override view returns (bool isOperator) {
-      // if OpenSea's ERC721 Proxy Address is detected, auto-return true
-        if (_operator == address(0xa5409ec958C83C3f309868babACA7c86DCB077c1)) {     // OpenSea approval
-            return true;
-        }
-        
-        // otherwise, use the default ERC721.isApprovedForAll()
-        return ERC721.isApprovedForAll(_owner, _operator);
-    }
-
-    function safeMint(address to, uint256 tokenId) public onlyOwner {
-        _safeMint(to, tokenId);
-    }
-
-    function _beforeTokenTransfer(address from, address to, uint256 tokenId)
-        internal
-        override(ERC721, ERC721Enumerable)
+    constructor (
+        string memory _name, 
+        string memory _symbol,
+        string memory _uri,
+        uint256 _presalePrice,
+        uint256 _publicPrice,
+        uint256 _maxPresaleMint,
+        uint256 _maxMint, 
+        uint256 _maxPerMint
+    ) 
+    ERC721(_name, _symbol)
     {
-        super._beforeTokenTransfer(from, to, tokenId);
+        _shareholders[0] = 0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2;
+        _shareholders[1] = 0x29c36265c63fE0C3d024b2E4d204b49deeFdD671;
+        _shareholders[2] = 0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF;
+        _shareholders[3] = 0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf;
+
+        _shares[0] = 20000; // 20%
+        _shares[1] = 20000; // 20%
+        _shares[2] = 20000; // 20%
+        _shares[3] = 40000; // 40%
+        
+        _baseURIPrefix = _uri;
+        presalePrice = _presalePrice;
+        publicPrice = _publicPrice;
+        maxPresaleMint = _maxPresaleMint;
+        maxMint = _maxMint;
+        maxPerMint = _maxPerMint;
+        fusionPrice = _fusionPrice;
     }
     
-    function burn(uint256 tokenId) public {
-        //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721Burnable: caller is not owner nor approved");
-        _burn(tokenId);
+    /* ============= Modifiers ============= */
+    modifier whenPresaleStarted() {
+        require(presaleStarted, "Presale has not started");
+        _;
+    }
+
+    modifier whenPublicSaleStarted() {
+        require(publicSaleStarted, "Public sale has not started");
+        _;
+    }
+
+    modifier onlyOwnerOrTeam() {
+        require(
+            _shareholders[0] == msg.sender || _shareholders[1] == msg.sender || 
+            _shareholders[1] == msg.sender || _shareholders[3] == msg.sender || owner() == msg.sender,
+            "caller is neither Team Wallet nor Owner"
+        );
+        _;
+    }
+
+    /* ============= Presale Handing ============= */
+    function addToPresale(address[] calldata addresses) external onlyOwnerOrTeam {
+        for (uint256 i = 0; i < addresses.length; i++) {
+            require(addresses[i] != address(0), "Cannot add null address");
+            _presaleEligible[addresses[i]] = true;
+            _totalClaimed[addresses[i]] > 0 ? _totalClaimed[addresses[i]] : 0;
+        }
+    }
+
+    function checkPresaleEligiblity(address addr) external view returns (bool) {
+        return _presaleEligible[addr];
+    }
+ 
+    /* ============= Token URI ============= */
+    function tokenURI(uint256 tokenId) override view public returns (string memory) {
+        return bytes(_baseURIPrefix).length > 0 ? string(abi.encodePacked(_baseURIPrefix, tokenId.toString(), _baseExtension)) : "";
+    }
+
+    function _baseURI() internal view override returns (string memory) {
+        return _baseURIPrefix;
+    }
+
+    function setBaseURI(string memory newUri) external onlyOwnerOrTeam {
+        _baseURIPrefix = newUri;
     }
     
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
-        super._burn(tokenId);
-        burnCount++;
+    /* ============= Toggle Minting, Presale and Fusion ============= */
+    function toggleMinting() external onlyOwnerOrTeam {
+        mintingEnabled = !mintingEnabled;
+    }
+    
+    function togglePresaleStarted() external onlyOwnerOrTeam {
+        presaleStarted = !presaleStarted;
     }
 
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory)
-    {
-        return super.tokenURI(tokenId);
+    function togglePublicSaleStarted() external onlyOwnerOrTeam {
+        publicSaleStarted = !publicSaleStarted;
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, ERC721Enumerable)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
+    /* ============= Edit Max Mint and Price ============= */
+    /* I've found these useful if needing to pivot during a sale */
+    function setPresalePrice(uint256 newPresalePrice) external onlyOwnerOrTeam {
+        presalePrice = newPresalePrice;
+    }
+    
+    function setPublicPrice(uint256 newPublicPrice) external onlyOwnerOrTeam {
+        publicPrice = newPublicPrice;
+    }
+
+    function setPresaleMaxMint(uint256 newPresaleMaxMint) external onlyOwnerOrTeam {
+        maxPresaleMint = newPresaleMaxMint;
+    }
+    
+    function setMaxMint(uint256 newMaxMint) external onlyOwnerOrTeam {
+        maxMint = newMaxMint;
+    }
+    
+    function setMaxPerMint(uint256 newPerMaxMint) external onlyOwnerOrTeam {
+        maxPerMint = newPerMaxMint;
+    }
+
+    /* ============= Index hash and provedence ============= */
+    function setStartingIndex() public onlyOwnerOrTeam {
+        require(startingIndex == 0, "Index is already set");
+        require(startingIndexBlock != 0, "Index block must be set");
+        
+        startingIndex = uint(blockhash(startingIndexBlock)) % MAX_TOKENS;
+        // If function is called late
+        if (block.number - startingIndexBlock > 255) {
+            startingIndex = uint(blockhash(block.number - 1)) % MAX_TOKENS;
+        }
+        // Prevent default sequence.
+        if (startingIndex == 0) {
+            startingIndex = 1;
+        }
+    }
+    
+    function emergencySetStartingIndexBlock() public onlyOwnerOrTeam {
+        require(startingIndex == 0, "Starting index is already set");
+        startingIndexBlock = block.number;
+    }
+
+    function setProvenanceHash(string memory provenanceHash) public onlyOwnerOrTeam {
+        provenance = provenanceHash;
+    }
+
+    /* ============= Minting Functions ============= */
+    function mintPresale(uint256 amount) external payable whenPresaleStarted {
+        require(mintingEnabled, "Minting is not available at this time");
+        require(amount > 0, "Must mint at least one token");
+        require(_presaleEligible[msg.sender], "You are not eligible for the presale");
+        require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
+        require(amount <= maxPresaleMint, "Cannot purchase this many tokens during presale");
+        require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
+        require(_totalClaimed[msg.sender] + amount <= maxMint, "Purchase exceeds max allowed");
+        require(presalePrice * amount == msg.value, "ETH amount is incorrect");
+
+        for (uint256 i = 0; i < amount; i++) {
+            uint256 tokenId = numTokensMinted + 1;
+
+            numTokensMinted += 1;
+            _totalClaimed[msg.sender] += 1;
+            _safeMint(msg.sender, tokenId);
+        }
+        
+        // If no starting index, set it.
+        if (startingIndexBlock == 0) {
+            startingIndexBlock = block.number;
+        }
+
+        emit PresaleMint(msg.sender, amount);
+    }
+
+    /*
+    * Public sale minting
+    */
+    function mint(uint256 amount) external payable whenPublicSaleStarted {
+        require(mintingEnabled, "Minting is not available at this time");
+        require(amount > 0, "Must mint at least one token");
+        require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
+        require(amount <= maxPerMint, "Cannot purchase this many tokens in a transaction");
+        require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
+        require(_totalClaimed[msg.sender] + amount <= MAX_TOKENS, "Purchase exceeds max allowed per address");
+        require(publicPrice * amount == msg.value, "ETH amount is incorrect");
+
+        for (uint256 i = 0; i < amount; i++) {
+            uint256 tokenId = numTokensMinted + 1;
+
+            numTokensMinted += 1;
+            _totalClaimed[msg.sender] += 1;
+            _safeMint(msg.sender, tokenId);
+        }
+        
+        // If no starting index, set it.
+        if (startingIndexBlock == 0) {
+            startingIndexBlock = block.number;
+        }
+
+        emit PublicSaleMint(msg.sender, amount);
+    } 
+
+    /*
+    * Mint reserved NFTs for giveaways, devs, etc.
+    */
+    function claimReserved(address recipient, uint256 amount) external onlyOwnerOrTeam {
+        require(mintingEnabled, "Minting is not available at this time");
+        require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
+        require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
+        require(reservedClaimed != RESERVED_TOKENS, "Already have claimed all reserved tokens");
+        require(reservedClaimed + amount <= RESERVED_TOKENS, "Minting would exceed max reserved tokens");
+
+        uint256 _nextTokenId = numTokensMinted + 1;
+
+        for (uint256 i = 0; i < amount; i++) {
+            _safeMint(recipient, _nextTokenId + i);
+        }
+        numTokensMinted += amount;
+        reservedClaimed += amount;
+        
+        // If no starting index, set it.
+        if (startingIndexBlock == 0) {
+            startingIndexBlock = block.number;
+        }
+
+        emit ReservedMint(msg.sender, amount);
+    }
+
+    /* ============= Withdraw funds ============= */
+    /*
+    * Withdraw funds and distribute % to respective owners
+    */
+    function withdraw(uint256 amount) public onlyOwnerOrTeam {
+        require(address(this).balance >= amount, "Insufficient balance");
+        for (uint256 i = 0; i < 4; i++) {
+            uint256 payment = amount * _shares[i] / baseMod;
+            Address.sendValue(payable(_shareholders[i]), payment);
+            emit PaymentReleased(_shareholders[i], payment);
+        }
     }
 }

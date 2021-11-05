@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import '@openzeppelin/contracts/utils/Counters.sol';
 
 
-contract BaseNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
+contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
     using SafeMath for uint;
     using Strings for uint;
     using Address for address;
@@ -27,7 +27,7 @@ contract BaseNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
     uint256 public maxPerMint;
     uint256 public fusionPrice;
     
-    // Set starting index and provedence
+    // Set starting index and provenance
     uint256 public startingIndexBlock;
     uint256 public startingIndex;
     string public provenance;
@@ -57,7 +57,6 @@ contract BaseNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
     // Mappings for whitelist and tracking mints per wallet
     mapping(address => bool) private _presaleEligible;
     mapping(address => uint256) private _totalClaimed;
-    mapping (uint256 => string) private _tokenURIs;
 
     // Events to emit
     event PaymentReleased(address to, uint256 amount);
@@ -170,6 +169,10 @@ contract BaseNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
     
     function setPublicPrice(uint256 newPublicPrice) external onlyOwnerOrTeam {
         publicPrice = newPublicPrice;
+    }
+    
+    function setFusionPrice(uint256 newFusionPrice) external onlyOwnerOrTeam {
+        fusionPrice = newFusionPrice;
     }
 
     function setPresaleMaxMint(uint256 newPresaleMaxMint) external onlyOwnerOrTeam {
