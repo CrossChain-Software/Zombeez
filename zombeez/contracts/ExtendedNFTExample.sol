@@ -109,6 +109,11 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
         _;
     }
 
+     modifier whenFusionIsActive() {
+        require(fusionIsActive, "Public sale has not started");
+        _;
+    }
+
     modifier onlyOwnerOrTeam() {
         require(
             _shareholders[0] == msg.sender || _shareholders[1] == msg.sender || 
@@ -251,7 +256,7 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     /*
     * Public sale minting
     */
-    function mint(uint256 amount) external payable whenPublicSaleStarted {
+    function publicMint(uint256 amount) external payable whenPublicSaleStarted {
         require(mintingEnabled, "Minting is not available at this time");
         require(amount > 0, "Must mint at least one token");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
@@ -303,7 +308,7 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     }
 
     /* ============= Fusion ============= */
-    function fuse(uint256 firstTokenId, uint256 secondTokenId) public payable {
+    function fuse(uint256 firstTokenId, uint256 secondTokenId) public payable whenFusionIsActive {
         require(fusionIsActive, "Fusion is inactive");
         require(fusionPrice <= msg.value, "Ether value sent is not correct");
 
