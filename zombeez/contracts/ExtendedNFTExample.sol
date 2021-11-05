@@ -49,13 +49,11 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     string private _baseURIPrefix;
     string private _baseExtension = ".json";
 
-    // Turning on and off minting / presale / publicsale
+    // Turning on and off minting / presale / publicsale / fusion
     bool public mintingEnabled; 
     bool public publicSaleStarted;
     bool public presaleStarted;
-    
-    // Allows fusion of two NFTs
-    bool public fusionIsActive = false;
+    bool public fusionIsActive;
     
     // Mappings for whitelist and tracking mints per wallet
     mapping(address => bool) private _presaleEligible;
