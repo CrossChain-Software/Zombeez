@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import '@openzeppelin/contracts/utils/Counters.sol';
 
 
-contract BaseExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
+contract BaseNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownable {
     using SafeMath for uint;
     using Strings for uint;
     using Address for address;
@@ -57,6 +57,7 @@ contract BaseExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ow
     // Mappings for whitelist and tracking mints per wallet
     mapping(address => bool) private _presaleEligible;
     mapping(address => uint256) private _totalClaimed;
+    mapping (uint256 => string) private _tokenURIs;
 
     // Events to emit
     event PaymentReleased(address to, uint256 amount);
@@ -134,12 +135,6 @@ contract BaseExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ow
     /* ============= Token URI ============= */
     function tokenURI(uint256 tokenId) override view public returns (string memory) {
         return bytes(_baseURIPrefix).length > 0 ? string(abi.encodePacked(_baseURIPrefix, tokenId.toString(), _baseExtension)) : "";
-    }
-    
-    // Used for fusion (probably a better way to do this?)
-    function _setTokenURI(uint256 tokenId, string memory _tokenURI) internal virtual {
-        require(_exists(tokenId), "ERC721Metadata: URI set of nonexistent token");
-        _tokenURIs[tokenId] = _tokenURI;
     }
 
     function _baseURI() internal view override returns (string memory) {
@@ -225,7 +220,7 @@ contract BaseExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ow
 
     /* ============= Minting Functions ============= */
     function mintPresale(uint256 amount) external payable whenPresaleStarted {
-        require(mintingEnabled, "Minting is not available at this time")
+        require(mintingEnabled, "Minting is not available at this time");
         require(amount > 0, "Must mint at least one token");
         require(_presaleEligible[msg.sender], "You are not eligible for the presale");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
@@ -254,7 +249,7 @@ contract BaseExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ow
     * Public sale minting
     */
     function mint(uint256 amount) external payable whenPublicSaleStarted {
-        require(mintingEnabled, "Minting is not available at this time")
+        require(mintingEnabled, "Minting is not available at this time");
         require(amount > 0, "Must mint at least one token");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
         require(amount <= maxPerMint, "Cannot purchase this many tokens in a transaction");
@@ -282,7 +277,7 @@ contract BaseExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ow
     * Mint reserved NFTs for giveaways, devs, etc.
     */
     function claimReserved(address recipient, uint256 amount) external onlyOwnerOrTeam {
-        require(mintingEnabled, "Minting is not available at this time")
+        require(mintingEnabled, "Minting is not available at this time");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
         require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
         require(reservedClaimed != RESERVED_TOKENS, "Already have claimed all reserved tokens");
