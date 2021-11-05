@@ -18,14 +18,12 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     // Constants
     uint256 public constant MAX_TOKENS = 5000;
     uint256 public constant RESERVED_TOKENS = 100;
-    
-    // Prices and max amount allowed to mint
-    uint256 public presalePrice;
-    uint256 public publicPrice;
-    uint256 public maxPresaleMint;
-    uint256 public maxMint;
-    uint256 public maxPerMint;
-    uint256 public fusionPrice;
+    uint256 public constant PRESALE_PRICE = 25000000000000000; // .025 ether
+    uint256 public constant PUBLIC_PRICE = 50000000000000000; // .05 ether
+    uint256 public constant FUSION_PRICE = 50000000000000000; // .05 ether
+    uint256 public constant MAX_PRESALE_MINT = 5;
+    uint256 public constant MAX_MINT = 25;
+    uint256 public constant MAX_PER_MINT = 5;
     
     // Set starting index and provenance
     uint256 public startingIndexBlock;
@@ -33,9 +31,14 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     string public provenance;
     
     // Setup for 4 contributors
-    address[4] private _shareholders;
-    uint[4] private _shares;
-    uint256 private constant baseMod = 100000; // Represents "all" shares
+    address[] internal _shareholders = [
+        0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2,
+        0x29c36265c63fE0C3d024b2E4d204b49deeFdD671,
+        0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF,
+        0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf
+    ];
+    uint256[] internal _shares = [20000, 20000, 20000, 40000];
+    uint256 private constant baseMod = 100000; // Represents "all" team shares
  
     // Keep track of how many minted
     Counters.Counter private _tokenIds;
@@ -69,33 +72,11 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     constructor (
         string memory _name, 
         string memory _symbol,
-        string memory _uri,
-        uint256 _presalePrice,
-        uint256 _publicPrice,
-        uint256 _fusionPrice,
-        uint256 _maxPresaleMint,
-        uint256 _maxMint, 
-        uint256 _maxPerMint
+        string memory _uri
     ) 
     ERC721(_name, _symbol)
     {
-        _shareholders[0] = 0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2;
-        _shareholders[1] = 0x29c36265c63fE0C3d024b2E4d204b49deeFdD671;
-        _shareholders[2] = 0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF;
-        _shareholders[3] = 0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf;
-
-        _shares[0] = 20000; // 20%
-        _shares[1] = 20000; // 20%
-        _shares[2] = 20000; // 20%
-        _shares[3] = 40000; // 40%
-        
         _baseURIPrefix = _uri;
-        presalePrice = _presalePrice;
-        publicPrice = _publicPrice;
-        maxPresaleMint = _maxPresaleMint;
-        maxMint = _maxMint;
-        maxPerMint = _maxPerMint;
-        fusionPrice = _fusionPrice;
     }
     
     /* ============= Modifiers ============= */
@@ -166,32 +147,6 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
         fusionIsActive = !fusionIsActive;
     }
 
-    /* ============= Edit Max Mint and Price ============= */
-    /* I've found these useful if needing to pivot during a sale */
-    function setPresalePrice(uint256 newPresalePrice) external onlyOwnerOrTeam {
-        presalePrice = newPresalePrice;
-    }
-    
-    function setPublicPrice(uint256 newPublicPrice) external onlyOwnerOrTeam {
-        publicPrice = newPublicPrice;
-    }
-    
-    function setFusionPrice(uint256 newFusionPrice) external onlyOwnerOrTeam {
-        fusionPrice = newFusionPrice;
-    }
-
-    function setPresaleMaxMint(uint256 newPresaleMaxMint) external onlyOwnerOrTeam {
-        maxPresaleMint = newPresaleMaxMint;
-    }
-    
-    function setMaxMint(uint256 newMaxMint) external onlyOwnerOrTeam {
-        maxMint = newMaxMint;
-    }
-    
-    function setMaxPerMint(uint256 newPerMaxMint) external onlyOwnerOrTeam {
-        maxPerMint = newPerMaxMint;
-    }
-
     /* ============= Index hash and provedence ============= */
     function setStartingIndex() public onlyOwnerOrTeam {
         require(startingIndex == 0, "Index is already set");
@@ -232,10 +187,10 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
         require(amount > 0, "Must mint at least one token");
         require(_presaleEligible[msg.sender], "You are not eligible for the presale");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
-        require(amount <= maxPresaleMint, "Cannot purchase this many tokens during presale");
+        require(amount <= MAX_PRESALE_MINT, "Cannot purchase this many tokens during presale");
         require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
-        require(_totalClaimed[msg.sender] + amount <= maxMint, "Purchase exceeds max allowed");
-        require(presalePrice * amount == msg.value, "ETH amount is incorrect");
+        require(_totalClaimed[msg.sender] + amount <= MAX_MINT, "Purchase exceeds max allowed");
+        require(PRESALE_PRICE * amount == msg.value, "ETH amount is incorrect");
 
         for (uint256 i = 0; i < amount; i++) {
             uint256 tokenId = numTokensMinted + 1;
@@ -260,10 +215,10 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
         require(mintingEnabled, "Minting is not available at this time");
         require(amount > 0, "Must mint at least one token");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
-        require(amount <= maxPerMint, "Cannot purchase this many tokens in a transaction");
+        require(amount <= MAX_PER_MINT, "Cannot purchase this many tokens in a transaction");
         require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
         require(_totalClaimed[msg.sender] + amount <= MAX_TOKENS, "Purchase exceeds max allowed per address");
-        require(publicPrice * amount == msg.value, "ETH amount is incorrect");
+        require(PUBLIC_PRICE * amount == msg.value, "ETH amount is incorrect");
 
         for (uint256 i = 0; i < amount; i++) {
             uint256 tokenId = numTokensMinted + 1;
@@ -310,7 +265,7 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     /* ============= Fusion ============= */
     function fuse(uint256 firstTokenId, uint256 secondTokenId) public payable whenFusionIsActive {
         require(fusionIsActive, "Fusion is inactive");
-        require(fusionPrice <= msg.value, "Ether value sent is not correct");
+        require(FUSION_PRICE == msg.value, "Ether value sent is not correct");
 
         // burn the two tokens being fused
         _burn(firstTokenId);
