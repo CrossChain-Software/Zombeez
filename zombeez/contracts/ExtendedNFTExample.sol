@@ -18,7 +18,7 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     uint256 public constant RESERVED_TOKENS = 100;
     uint256 public constant PRESALE_PRICE = 25000000000000000; // .025 ether
     uint256 public constant PUBLIC_PRICE = 50000000000000000; // .05 ether
-    uint256 public constant FUSION_PRICE = 50000000000000000; // .05 ether
+    uint256 public constant FUSION_PRICE = 75000000000000000; // .075 ether
     uint256 public constant MAX_PRESALE_MINT = 5;
     uint256 public constant MAX_MINT = 25;
     uint256 public constant MAX_PER_MINT = 5;
@@ -44,8 +44,7 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     uint256 public numTokensMinted;
     
     // URI / IPFS 
-    string private _baseURIPrefix;
-    string private _baseExtension = ".json";
+    string private _baseTokenURI;
 
     // Turning on and off minting / presale / publicsale / fusion
     bool public mintingEnabled; 
@@ -72,7 +71,7 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     ) 
     ERC721(_name, _symbol)
     {
-        _baseURIPrefix = _uri;
+        _baseTokenURI = _uri;
     }
     
     /* ============= Modifiers ============= */
@@ -114,16 +113,12 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     }
  
     /* ============= Token URI ============= */
-    function tokenURI(uint256 tokenId) override view public returns (string memory) {
-        return bytes(_baseURIPrefix).length > 0 ? string(abi.encodePacked(_baseURIPrefix, tokenId.toString(), _baseExtension)) : "";
-    }
-
     function _baseURI() internal view override returns (string memory) {
-        return _baseURIPrefix;
+        return _baseTokenURI;
     }
 
     function setBaseURI(string memory newUri) external onlyOwnerOrTeam {
-        _baseURIPrefix = newUri;
+        _baseTokenURI = newUri;
     }
     
     /* ============= Toggle Minting, Presale and Fusion ============= */
@@ -139,7 +134,7 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
         publicSaleStarted = !publicSaleStarted;
     }
     
-    function toggleFusion() public onlyOwnerOrTeam {
+    function toggleFusion() external onlyOwnerOrTeam {
         fusionIsActive = !fusionIsActive;
     }
 
