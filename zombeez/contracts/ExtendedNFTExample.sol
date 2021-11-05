@@ -35,7 +35,7 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
     // Setup for 4 contributors
     address[4] private _shareholders;
     uint[4] private _shares;
-    uint256 private constant baseMod = 100000;
+    uint256 private constant baseMod = 100000; // Represents "all" shares
  
     // Keep track of how many minted
     Counters.Counter private _tokenIds;
@@ -325,11 +325,12 @@ contract ExtendedNFTTemplate is ERC721, ERC721Enumerable, ERC721Burnable, Ownabl
 
     /* ============= Withdraw funds ============= */
     /*
-    * Withdraw funds and distribute % to respective owners
+    * Withdraw funds and distribute % to respective contributors
     */
     function withdraw(uint256 amount) public onlyOwnerOrTeam {
         require(address(this).balance >= amount, "Insufficient balance");
-        for (uint256 i = 0; i < 4; i++) {
+        uint256 recepients = _shareholders.length;
+        for (uint256 i = 0; i < recepients; i++) {
             uint256 payment = amount * _shares[i] / baseMod;
             Address.sendValue(payable(_shareholders[i]), payment);
             emit PaymentReleased(_shareholders[i], payment);
