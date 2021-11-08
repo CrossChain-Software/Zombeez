@@ -19,16 +19,11 @@ contract Zombeez is ERC721Enumerable, Ownable {
     uint256 public constant RESERVED_TOKENS = 100;
     
     // Prices and max amount allowed to mint
-    uint256 public presalePrice = 1000000000000000;
-    uint256 public publicPrice = 1000000000000000;
+    uint256 public presalePrice = 25000000000000000; // .025 eth
+    uint256 public publicPrice = 50000000000000000; // .05 eth
     uint256 public maxPresaleMint = 5;
     uint256 public maxMint = 20;
     uint256 public maxPerMint = 10;
-    
-    // Set starting index and provenance
-    uint256 public startingIndexBlock;
-    uint256 public startingIndex;
-    string public provenance;
     
     // Setup for 4 contributors
     address[4] private _shareholders = [
@@ -42,7 +37,6 @@ contract Zombeez is ERC721Enumerable, Ownable {
  
     // Keep track of how many minted
     Counters.Counter private _tokenIds;
-    uint256 public reservedClaimed;
     uint256 public numTokensMinted;
     
     // URI / IPFS 
@@ -61,7 +55,6 @@ contract Zombeez is ERC721Enumerable, Ownable {
     // Events to emit
     event PaymentReleased(address to, uint256 amount);
     event BaseURIChanged(string baseURI);
-    event ReservedMint(address minter, uint256 amount);
     event PresaleMint(address minter, uint256 amount);
     event PublicSaleMint(address minter, uint256 amount);
 
@@ -157,31 +150,6 @@ contract Zombeez is ERC721Enumerable, Ownable {
         maxPerMint = newPerMaxMint;
     }
 
-    /* ============= Index hash and provedence ============= */
-    function setStartingIndex() public onlyOwnerOrTeam {
-        require(startingIndex == 0, "Index is already set");
-        require(startingIndexBlock != 0, "Index block must be set");
-        
-        startingIndex = uint(blockhash(startingIndexBlock)) % MAX_TOKENS;
-        // If function is called late
-        if (block.number - startingIndexBlock > 255) {
-            startingIndex = uint(blockhash(block.number - 1)) % MAX_TOKENS;
-        }
-        // Prevent default sequence.
-        if (startingIndex == 0) {
-            startingIndex = 1;
-        }
-    }
-    
-    function emergencySetStartingIndexBlock() public onlyOwnerOrTeam {
-        require(startingIndex == 0, "Starting index is already set");
-        startingIndexBlock = block.number;
-    }
-
-    function setProvenanceHash(string memory provenanceHash) public onlyOwnerOrTeam {
-        provenance = provenanceHash;
-    }
-
     /* ============= Minting Functions ============= */
     function mintPresale(uint256 amount) external payable whenPresaleStarted {
         require(amount > 0, "Must mint at least one token");
@@ -191,6 +159,7 @@ contract Zombeez is ERC721Enumerable, Ownable {
         require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
         require(_totalClaimed[msg.sender] + amount <= maxMint, "Purchase exceeds max allowed");
         require(presalePrice * amount == msg.value, "ETH amount is incorrect");
+        // Add logic here to make it free to mint for holders of whatever
 
         for (uint256 i = 0; i < amount; i++) {
             uint256 tokenId = numTokensMinted + 1;
@@ -198,11 +167,6 @@ contract Zombeez is ERC721Enumerable, Ownable {
             numTokensMinted += 1;
             _totalClaimed[msg.sender] += 1;
             _safeMint(msg.sender, tokenId);
-        }
-        
-        // If no starting index, set it.
-        if (startingIndexBlock == 0) {
-            startingIndexBlock = block.number;
         }
 
         emit PresaleMint(msg.sender, amount);
@@ -226,39 +190,9 @@ contract Zombeez is ERC721Enumerable, Ownable {
             _totalClaimed[msg.sender] += 1;
             _safeMint(msg.sender, tokenId);
         }
-        
-        // If no starting index, set it.
-        if (startingIndexBlock == 0) {
-            startingIndexBlock = block.number;
-        }
 
         emit PublicSaleMint(msg.sender, amount);
     } 
-
-    /*
-    * Mint reserved NFTs for giveaways, devs, etc.
-    */
-    function claimReserved(address recipient, uint256 amount) external onlyOwnerOrTeam {
-        require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
-        require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
-        require(reservedClaimed != RESERVED_TOKENS, "Already have claimed all reserved tokens");
-        require(reservedClaimed + amount <= RESERVED_TOKENS, "Minting would exceed max reserved tokens");
-
-        uint256 _nextTokenId = numTokensMinted + 1;
-
-        for (uint256 i = 0; i < amount; i++) {
-            _safeMint(recipient, _nextTokenId + i);
-        }
-        numTokensMinted += amount;
-        reservedClaimed += amount;
-        
-        // If no starting index, set it.
-        if (startingIndexBlock == 0) {
-            startingIndexBlock = block.number;
-        }
-
-        emit ReservedMint(msg.sender, amount);
-    }
 
     /* ============= Withdraw funds ============= */
     /*
@@ -266,7 +200,8 @@ contract Zombeez is ERC721Enumerable, Ownable {
     */
     function withdraw(uint256 amount) public onlyOwnerOrTeam {
         require(address(this).balance >= amount, "Insufficient balance");
-        for (uint256 i = 0; i < 4; i++) {
+        contributors = _shareholders.length;
+        for (uint256 i = 0; i < contributors; i++) {
             uint256 payment = amount * _shares[i] / baseMod;
             Address.sendValue(payable(_shareholders[i]), payment);
             emit PaymentReleased(_shareholders[i], payment);
