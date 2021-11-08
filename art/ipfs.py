@@ -8,16 +8,37 @@ from pathlib import Path
 def generate_metadata(id, accessory, background, body, clothes, eyes, head, mouth):
     metadata = {}
     metadata["name"] = f'ZOMBEEZ {id}'
-    metadata["description"] = 'Eurphoric generative art made with AI'
+    metadata["description"] = 'ZOMBEEZ'
     metadata["image"] = ''
-    metadata["attributes"] = {"Background": background.title(),
-                              "Accessory": accessory.title(),
-                              "Body": body.title(),
-                              "Clothes": clothes.title(),
-                              "Eyes": eyes.title(),
-                              "Head": head.title(),
-                              "Mouth": mouth.title()
-                             }
+    metadata["attributes"] = [{
+                                "trait_type": "Background", 
+                                "value": background.title()
+                              },
+                              {
+                                "trait_type": "Accessory", 
+                                "value": accessory.title()
+                              },
+                              {
+                                "trait_type": "Body", 
+                                "value": body.title()
+                              },
+                              {
+                                "trait_type": "Clothes", 
+                                "value": clothes.title()
+                              },
+                              {
+                                "trait_type": "Eyes", 
+                                "value": eyes.title()
+                              },
+                              {
+                                "trait_type": "Head", 
+                                "value": head.title()
+                              },
+                              {
+                                "trait_type": "Mouth", 
+                                "value": mouth.title()
+                              }
+                             ]
     return metadata
 
 

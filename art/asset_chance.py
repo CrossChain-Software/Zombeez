@@ -87,11 +87,13 @@ eyes = {
     'SUNGLASSES': 0.04,
     'THICK ROUND': 0.03,
     'UNDEAD EYES': 0.01,
-    'NONE': 0.4
+    'ANON MASK': .007,
+    'JASON MASK': .01,
+    'SKI MASK': .013,
+    'NONE': 0.37
 }
 
 head = {
-    'ANON MASK': 0.02,
     'AQUA MOHAWK': 0.03,
     'BASEBALL CAP GREEN': 0.04,
     'BASEBALL CAP': 0.02,
@@ -101,21 +103,19 @@ head = {
     'EARRING': 0.04,
     'FEZ': 0.015,
     'FROG': 0.03,
-    'JASON MASK': 0.01,
     'MCDONALDS HAT': 0.02,
     'ORANGE BEANIE': 0.04,
     'ORANGE POOF': 0.008,
     'PIGTAILS': 0.02,
     'RAINBOW MOHAWK': 0.01,
     'RED GNOME': 0.03,
-    'SKI MASK': 0.02,
     'STRINGY WHITE': 0.05,
     'SUPER SAYAIN': 0.01,
     'TOADSTOOL': 0.05,
     'TOP HAT': 0.03,
     'WILD WHITE HAIR': 0.02,
     'WILD ORANGE': 0.02,
-    'NONE': 0.4,
+    'NONE': 0.45,
     'CROWN': 0.01
 }
 

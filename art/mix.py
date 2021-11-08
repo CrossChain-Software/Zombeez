@@ -20,7 +20,7 @@ def select_asset(asset_list: list, weights: list) -> str:
 
 ASSET_DIR = '/zombeez_assets/'
 
-for x in range(1, 8327):
+for x in range(1, 8328):
     print(x)
     # This should prob be a function... oh well
     bg_choice = select_asset(list(asset_chance.background.keys()), list(asset_chance.background.values()))[0]
@@ -53,10 +53,10 @@ for x in range(1, 8327):
         bg_png.paste(assessory_png, (0,0), assessory_png)
     resized_img = bg_png.resize((600, 600), resample=Image.NEAREST)
     resized_img.save(f'images/{x}.png', 'PNG')
-    img_url = ipfs.upload_to_ipfs(f'images/{x}.png')
-    metadata = ipfs.generate_metadata(id, accessory_choice, bg_choice, body_choice, clothes_choice, 
+    img_url = ipfs.upload_to_ipfs(f'images/{x}.png', f'ZOMBEEZ {x}')
+    metadata = ipfs.generate_metadata(x, accessory_choice, bg_choice, body_choice, clothes_choice, 
                                       eyes_choice, head_choice, mouth_choice)
     metadata["image"] = img_url
     print(img_url)
-    with open(f'jsons/{x}'.json, 'w') as w:
+    with open(f'jsons/{x}', 'w') as w:
         json.dump(metadata, w)
