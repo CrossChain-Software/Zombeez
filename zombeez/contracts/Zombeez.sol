@@ -15,8 +15,7 @@ contract Zombeez is ERC721Enumerable, Ownable {
     using Counters for Counters.Counter;
 
     // Constants
-    uint256 public constant MAX_TOKENS = 5000;
-    uint256 public constant RESERVED_TOKENS = 100;
+    uint256 public constant MAX_TOKENS = 8335;
     
     // Prices and max amount allowed to mint
     uint256 public presalePrice = 25000000000000000; // .025 eth
@@ -53,7 +52,6 @@ contract Zombeez is ERC721Enumerable, Ownable {
     mapping(address => uint256) private _totalClaimed;
 
     // Events to emit
-    event PaymentReleased(address to, uint256 amount);
     event BaseURIChanged(string baseURI);
     event PresaleMint(address minter, uint256 amount);
     event PublicSaleMint(address minter, uint256 amount);
