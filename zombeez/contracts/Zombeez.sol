@@ -19,11 +19,11 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     uint256 public constant RESERVED_TOKENS = 100;
     
     // Prices and max amount allowed to mint
-    uint256 public presalePrice;
-    uint256 public publicPrice;
-    uint256 public maxPresaleMint;
-    uint256 public maxMint;
-    uint256 public maxPerMint;
+    uint256 public presalePrice = 0.025 ether;
+    uint256 public publicPrice = 0.05 ether;
+    uint256 public maxPresaleMint = 5;
+    uint256 public maxMint = 20;
+    uint256 public maxPerMint = 10;
     
     // Set starting index and provenance
     uint256 public startingIndexBlock;
@@ -50,7 +50,8 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     string private _baseExtension = ".json";
 
     // Turning on and off minting / presale / publicsale
-    bool public mintingEnabled; 
+    bool public presaleMintingEnabled; 
+    bool public publicMintingEnabled; 
     bool public publicSaleStarted;
     bool public presaleStarted;
     
@@ -66,24 +67,11 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     event PublicSaleMint(address minter, uint256 amount);
 
     constructor (
-        string memory _name, 
-        string memory _symbol,
-        string memory _uri,
-        uint256 _presalePrice, // .05, but free for toadz holders?
-        uint256 _publicPrice, // .05?
-        uint256 _maxPresaleMint, 
-        uint256 _maxMint, 
-        uint256 _maxPerMint
+        string memory _uri
     ) 
     ERC721(_name, _symbol)
     {
         _baseURIPrefix = _uri;
-        presalePrice = _presalePrice;
-        publicPrice = _publicPrice;
-        maxPresaleMint = _maxPresaleMint;
-        maxMint = _maxMint;
-        maxPerMint = _maxPerMint;
-        fusionPrice = _fusionPrice;
     }
     
     /* ============= Modifiers ============= */
@@ -133,8 +121,12 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     }
     
     /* ============= Toggle Minting, Presale and Fusion ============= */
-    function toggleMinting() external onlyOwnerOrTeam {
-        mintingEnabled = !mintingEnabled;
+    function presaleToggleMinting() external onlyOwnerOrTeam {
+        presaleMintingEnabled = !presaleMintingEnabled;
+    }
+
+    function publicToggleMinting() external onlyOwnerOrTeam {
+        publicMintingEnabled = !publicMintingEnabled;
     }
     
     function togglePresaleStarted() external onlyOwnerOrTeam {
@@ -222,7 +214,7 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     /*
     * Public sale minting
     */
-    function mint(uint256 amount) external payable whenPublicSaleStarted {
+    function mintPublicSale(uint256 amount) external payable whenPublicSaleStarted {
         require(mintingEnabled, "Minting is not available at this time");
         require(amount > 0, "Must mint at least one token");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
