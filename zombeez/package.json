@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+<<<<<<< HEAD
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
     "@testing-library/jest-dom": "^5.11.4",
@@ -14,10 +15,23 @@
     "ethers": "^5.5.1",
     "hardhat": "^2.6.7",
     "merkletreejs": "^0.2.24",
+=======
+    "@chakra-ui/react": "^1.0.0",
+    "@emotion/react": "^11.0.0",
+    "@emotion/styled": "^11.0.0",
+    "@fontsource/arbutus": "^4.5.0",
+    "@fontsource/open-sans": "^4.5.2",
+    "@fontsource/raleway": "^4.5.0",
+    "@testing-library/jest-dom": "^5.9.0",
+    "@testing-library/react": "^10.2.1",
+    "@testing-library/user-event": "^12.0.2",
+    "framer-motion": "^4.0.0",
+>>>>>>> 554e2dbab18a69f1850b291920d229061a81ba08
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-icons": "^3.0.0",
     "react-scripts": "4.0.3",
-    "web-vitals": "^1.0.1"
+    "web-vitals": "^0.2.2"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -26,10 +40,7 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+    "extends": "react-app"
   },
   "browserslist": {
     "production": [
@@ -44,6 +55,15 @@
     ]
   },
   "devDependencies": {
+<<<<<<< HEAD
     "@types/node": "^16.11.6"
+=======
+    "@nomiclabs/hardhat-ethers": "^2.0.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "chai": "^4.2.0",
+    "ethereum-waffle": "^3.0.0",
+    "ethers": "^5.5.1",
+    "hardhat": "^2.6.5"
+>>>>>>> 554e2dbab18a69f1850b291920d229061a81ba08
   }
 }
