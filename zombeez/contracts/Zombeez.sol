@@ -31,7 +31,12 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     string public provenance;
     
     // Setup for 4 contributors
-    address[4] private _shareholders = [0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2, 0x29c36265c63fE0C3d024b2E4d204b49deeFdD671, 0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF, 0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf];
+    address[4] private _shareholders = [
+        0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2, 
+        0x29c36265c63fE0C3d024b2E4d204b49deeFdD671, 
+        0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF, 
+        0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf
+    ];
     uint[4] private _shares = [20000, 20000, 20000, 40000];
     uint256 private constant baseMod = 100000;
  
@@ -64,9 +69,9 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
         string memory _name, 
         string memory _symbol,
         string memory _uri,
-        uint256 _presalePrice,
-        uint256 _publicPrice,
-        uint256 _maxPresaleMint,
+        uint256 _presalePrice, // .05, but free for toadz holders?
+        uint256 _publicPrice, // .05?
+        uint256 _maxPresaleMint, 
         uint256 _maxMint, 
         uint256 _maxPerMint
     ) 
