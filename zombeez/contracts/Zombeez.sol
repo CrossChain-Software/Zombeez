@@ -31,8 +31,8 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     string public provenance;
     
     // Setup for 4 contributors
-    address[4] private _shareholders;
-    uint[4] private _shares;
+    address[4] private _shareholders = [0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2, 0x29c36265c63fE0C3d024b2E4d204b49deeFdD671, 0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF, 0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf];
+    uint[4] private _shares = [20000, 20000, 20000, 40000];
     uint256 private constant baseMod = 100000;
  
     // Keep track of how many minted
@@ -72,16 +72,6 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     ) 
     ERC721(_name, _symbol)
     {
-        _shareholders[0] = 0x04C8a5eB62F208FA2c91d017ee5C60e00F54BcF2;
-        _shareholders[1] = 0x29c36265c63fE0C3d024b2E4d204b49deeFdD671;
-        _shareholders[2] = 0x92a7BD65c8b2a9c9d98be8eAa92de46d1fbdefaF;
-        _shareholders[3] = 0x958C09c135650F50b398b3D1E8c4ce9227e5CCEf;
-
-        _shares[0] = 20000; // 20%
-        _shares[1] = 20000; // 20%
-        _shares[2] = 20000; // 20%
-        _shares[3] = 40000; // 40%
-        
         _baseURIPrefix = _uri;
         presalePrice = _presalePrice;
         publicPrice = _publicPrice;
