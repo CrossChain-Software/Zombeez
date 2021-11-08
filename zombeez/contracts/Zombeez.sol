@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+/ SPDX-License-Identifier: MIT
+pragma solidity ^0.8.7;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import '@openzeppelin/contracts/utils/Counters.sol';
 
 
-contract Zombeez is ERC721, ERC721Enumerable, Ownable {
+contract Zombeez is ERC721Enumerable, Ownable {
     using SafeMath for uint;
     using Strings for uint;
     using Address for address;
@@ -19,8 +19,8 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     uint256 public constant RESERVED_TOKENS = 100;
     
     // Prices and max amount allowed to mint
-    uint256 public presalePrice = 0.025 ether;
-    uint256 public publicPrice = 0.05 ether;
+    uint256 public presalePrice = 1000000000000000;
+    uint256 public publicPrice = 1000000000000000;
     uint256 public maxPresaleMint = 5;
     uint256 public maxMint = 20;
     uint256 public maxPerMint = 10;
@@ -46,8 +46,7 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     uint256 public numTokensMinted;
     
     // URI / IPFS 
-    string private _baseURIPrefix;
-    string private _baseExtension = ".json";
+    string public baseTokenURI;
 
     // Turning on and off minting / presale / publicsale
     bool public presaleMintingEnabled; 
@@ -67,11 +66,13 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     event PublicSaleMint(address minter, uint256 amount);
 
     constructor (
+        string memory _name,
+        string memory _symbol,
         string memory _uri
     ) 
     ERC721(_name, _symbol)
     {
-        _baseURIPrefix = _uri;
+        baseTokenURI = _uri;
     }
     
     /* ============= Modifiers ============= */
@@ -108,16 +109,13 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     }
  
     /* ============= Token URI ============= */
-    function tokenURI(uint256 tokenId) override view public returns (string memory) {
-        return bytes(_baseURIPrefix).length > 0 ? string(abi.encodePacked(_baseURIPrefix, tokenId.toString(), _baseExtension)) : "";
-    }
 
     function _baseURI() internal view override returns (string memory) {
-        return _baseURIPrefix;
+        return baseTokenURI;
     }
 
     function setBaseURI(string memory newUri) external onlyOwnerOrTeam {
-        _baseURIPrefix = newUri;
+        baseTokenURI = newUri;
     }
     
     /* ============= Toggle Minting, Presale and Fusion ============= */
@@ -186,7 +184,6 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
 
     /* ============= Minting Functions ============= */
     function mintPresale(uint256 amount) external payable whenPresaleStarted {
-        require(mintingEnabled, "Minting is not available at this time");
         require(amount > 0, "Must mint at least one token");
         require(_presaleEligible[msg.sender], "You are not eligible for the presale");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
@@ -215,7 +212,6 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     * Public sale minting
     */
     function mintPublicSale(uint256 amount) external payable whenPublicSaleStarted {
-        require(mintingEnabled, "Minting is not available at this time");
         require(amount > 0, "Must mint at least one token");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
         require(amount <= maxPerMint, "Cannot purchase this many tokens in a transaction");
@@ -243,7 +239,6 @@ contract Zombeez is ERC721, ERC721Enumerable, Ownable {
     * Mint reserved NFTs for giveaways, devs, etc.
     */
     function claimReserved(address recipient, uint256 amount) external onlyOwnerOrTeam {
-        require(mintingEnabled, "Minting is not available at this time");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
         require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
         require(reservedClaimed != RESERVED_TOKENS, "Already have claimed all reserved tokens");

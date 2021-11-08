@@ -86,12 +86,14 @@ eyes = {
     'RED LASER': 'zombeez_assets/Eyes_Red_Laser.png',
     'SUNGLASSES': 'zombeez_assets/Eyes_Sunglasses.png',
     'THICK ROUND': 'zombeez_assets/Eyes_Thick_Round.png',
-    'UNDEAD EYES': 'zombeez_assets/Eyes_Undead_Eyes.png'
+    'UNDEAD EYES': 'zombeez_assets/Eyes_Undead_Eyes.png',
+    'SKI MASK': 'zombeez_assets/Eyes_Ski_Mask.png',
+    'JASON MASK': 'zombeez_assets/Eyes_Jason_Mask.png',
+    'ANON MASK': 'zombeez_assets/Eyes_Anon_Mask.png'
 }
 
 head = {
     'CROWN': 'zombeez_assets/Head_King_Crown.png',
-    'ANON MASK': 'zombeez_assets/Head_Anon_Mask.png',
     'AQUA MOHAWK': 'zombeez_assets/Head_Aqua_Mohawk.png',
     'BASEBALL CAP GREEN': 'zombeez_assets/Head_Baseball_Cap_Green.png',
     'BASEBALL CAP': 'zombeez_assets/Head_Baseball_Cap.png',
@@ -101,14 +103,12 @@ head = {
     'EARRING': 'zombeez_assets/Head_Earring.png',
     'FEZ': 'zombeez_assets/Head_Fez.png',
     'FROG': 'zombeez_assets/Head_Frog_Hat.png',
-    'JASON MASK': 'zombeez_assets/Head_Jason_Mask.png',
     'MCDONALDS HAT': 'zombeez_assets/Head_McDonalds_Hat.png',
     'ORANGE BEANIE': 'zombeez_assets/Head_Orange_Beanie.png',
     'ORANGE POOF': 'zombeez_assets/Head_Orange_Poof.png',
     'PIGTAILS': '/zombeez_assets/Head_Pigtails.png',
     'RAINBOW MOHAWK': 'zombeez_assets/Head_Rainbow_Mohawk.png',
     'RED GNOME': 'zombeez_assets/Head_Red_Gnome.png',
-    'SKI MASK': 'zombeez_assets/Head_Ski_Mask.png',
     'STRINGY WHITE': 'zombeez_assets/Head_Stringy_White.png',
     'SUPER SAYAIN': 'zombeez_assets/Head_Super_Sayain.png',
     'TOADSTOOL': 'zombeez_assets/Head_Toadstool.png',
