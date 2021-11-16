@@ -1,26 +1,42 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import '@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import '@openzeppelin/contracts/utils/Counters.sol';
 
 
-contract Zombeez is ERC721Enumerable, Ownable {
-    using SafeMath for uint;
+contract MerkleProof {
+    function verify(bytes32 root, bytes32 leaf, bytes32[] memory proof, uint256[] memory positions) public pure returns (bool) {
+        bytes32 computedHash = leaf;
+
+        for (uint256 i = 0; i < proof.length; i++) {
+            bytes32 proofElement = proof[i];
+
+        if (positions[i] == 1) {
+            computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+        } else {
+            computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+            }
+        }
+
+        return computedHash == root;
+    }
+}
+
+contract Zombeez is ERC721Enumerable, Ownable, MerkleProof {
     using Strings for uint;
     using Address for address;
     using Counters for Counters.Counter;
-
+    
+    // Merkle root
+    bytes32 public immutable merkleRoot;
+    
     // Constants
     uint256 public constant MAX_TOKENS = 8335;
     
     // Prices and max amount allowed to mint
-    uint256 public presalePrice = 25000000000000000; // .025 eth
     uint256 public publicPrice = 50000000000000000; // .05 eth
-    uint256 public maxPresaleMint = 5;
     uint256 public maxMint = 20;
     uint256 public maxPerMint = 10;
     
@@ -42,41 +58,31 @@ contract Zombeez is ERC721Enumerable, Ownable {
     string public baseTokenURI;
 
     // Turning on and off minting / presale / publicsale
-    bool public presaleMintingEnabled; 
     bool public publicMintingEnabled; 
     bool public publicSaleStarted;
-    bool public presaleStarted;
     
     // Mappings for whitelist and tracking mints per wallet
-    mapping(address => bool) private _presaleEligible;
     mapping(address => uint256) private _totalClaimed;
 
     // Events to emit
     event BaseURIChanged(string baseURI);
-    event PresaleMint(address minter, uint256 amount);
     event PublicSaleMint(address minter, uint256 amount);
+    event PresaleMint(address minter, uint256 amount);
 
     constructor (
         string memory _name,
         string memory _symbol,
-        string memory _uri
+        string memory _uri,
+        bytes32 _merkleRoot
     ) 
     ERC721(_name, _symbol)
     {
         baseTokenURI = _uri;
+        merkleRoot = _merkleRoot;
     }
     
     /* ============= Modifiers ============= */
-    modifier whenPresaleStarted() {
-        require(presaleStarted, "Presale has not started");
-        _;
-    }
-
-    modifier whenPublicSaleStarted() {
-        require(publicSaleStarted, "Public sale has not started");
-        _;
-    }
-
+    
     modifier onlyOwnerOrTeam() {
         require(
             _shareholders[0] == msg.sender || _shareholders[1] == msg.sender || 
@@ -86,19 +92,6 @@ contract Zombeez is ERC721Enumerable, Ownable {
         _;
     }
 
-    /* ============= Presale Handing ============= */
-    function addToPresale(address[] calldata addresses) external onlyOwnerOrTeam {
-        for (uint256 i = 0; i < addresses.length; i++) {
-            require(addresses[i] != address(0), "Cannot add null address");
-            _presaleEligible[addresses[i]] = true;
-            _totalClaimed[addresses[i]] > 0 ? _totalClaimed[addresses[i]] : 0;
-        }
-    }
-
-    function checkPresaleEligiblity(address addr) external view returns (bool) {
-        return _presaleEligible[addr];
-    }
- 
     /* ============= Token URI ============= */
 
     function _baseURI() internal view override returns (string memory) {
@@ -110,36 +103,15 @@ contract Zombeez is ERC721Enumerable, Ownable {
     }
     
     /* ============= Toggle Minting, Presale and Fusion ============= */
-    function presaleToggleMinting() external onlyOwnerOrTeam {
-        presaleMintingEnabled = !presaleMintingEnabled;
-    }
 
     function publicToggleMinting() external onlyOwnerOrTeam {
         publicMintingEnabled = !publicMintingEnabled;
-    }
-    
-    function togglePresaleStarted() external onlyOwnerOrTeam {
-        presaleStarted = !presaleStarted;
-    }
+    } 
 
-    function togglePublicSaleStarted() external onlyOwnerOrTeam {
-        publicSaleStarted = !publicSaleStarted;
-    }
-
-    /* ============= Edit Max Mint and Price ============= */
-    /* I've found these useful if needing to pivot during a sale */
-    function setPresalePrice(uint256 newPresalePrice) external onlyOwnerOrTeam {
-        presalePrice = newPresalePrice;
-    }
-    
     function setPublicPrice(uint256 newPublicPrice) external onlyOwnerOrTeam {
         publicPrice = newPublicPrice;
     }
 
-    function setPresaleMaxMint(uint256 newPresaleMaxMint) external onlyOwnerOrTeam {
-        maxPresaleMint = newPresaleMaxMint;
-    }
-    
     function setMaxMint(uint256 newMaxMint) external onlyOwnerOrTeam {
         maxMint = newMaxMint;
     }
@@ -148,16 +120,22 @@ contract Zombeez is ERC721Enumerable, Ownable {
         maxPerMint = newPerMaxMint;
     }
 
+    /* ============= Verify Merkle to mint for free ============= */
+    
+    function verifyWhitelist(bytes32[] memory _proof, uint256[] memory _positions) public view returns (bool) {
+        bytes32 _leaf = keccak256(abi.encodePacked(msg.sender));
+        return MerkleProof.verify(merkleRoot, _leaf, _proof, _positions);
+    }
+
     /* ============= Minting Functions ============= */
-    function mintPresale(uint256 amount) external payable whenPresaleStarted {
+    // Allows Dizzy Dragons and CryptoToadz to mint for free
+    function mintForTokenHolders(uint256 amount, bytes32[] memory _proof, uint256[] memory _positions) external {
+        require(verifyWhitelist(_proof, _positions), "Not on the whitelist"); 
         require(amount > 0, "Must mint at least one token");
-        require(_presaleEligible[msg.sender], "You are not eligible for the presale");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
-        require(amount <= maxPresaleMint, "Cannot purchase this many tokens during presale");
+        require(amount <= 3, "Cannot purchase this many tokens during 'presale'");
         require(totalSupply() + amount <= MAX_TOKENS, "Minting would exceed max supply");
         require(_totalClaimed[msg.sender] + amount <= maxMint, "Purchase exceeds max allowed");
-        require(presalePrice * amount == msg.value, "ETH amount is incorrect");
-        // Add logic here to make it free to mint for holders of whatever
 
         for (uint256 i = 0; i < amount; i++) {
             uint256 tokenId = numTokensMinted + 1;
@@ -166,14 +144,14 @@ contract Zombeez is ERC721Enumerable, Ownable {
             _totalClaimed[msg.sender] += 1;
             _safeMint(msg.sender, tokenId);
         }
-
         emit PresaleMint(msg.sender, amount);
+
     }
 
     /*
     * Public sale minting
     */
-    function mintPublicSale(uint256 amount) external payable whenPublicSaleStarted {
+    function mintPublicSale(uint256 amount) external payable {
         require(amount > 0, "Must mint at least one token");
         require(totalSupply() < MAX_TOKENS, "All tokens have been minted");
         require(amount <= maxPerMint, "Cannot purchase this many tokens in a transaction");
@@ -198,11 +176,9 @@ contract Zombeez is ERC721Enumerable, Ownable {
     */
     function withdraw(uint256 amount) public onlyOwnerOrTeam {
         require(address(this).balance >= amount, "Insufficient balance");
-        contributors = _shareholders.length;
-        for (uint256 i = 0; i < contributors; i++) {
+        for (uint256 i = 0; i < 4; i++) {
             uint256 payment = amount * _shares[i] / baseMod;
             Address.sendValue(payable(_shareholders[i]), payment);
-            emit PaymentReleased(_shareholders[i], payment);
         }
     }
 }

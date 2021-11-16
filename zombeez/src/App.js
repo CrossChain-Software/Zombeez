@@ -1,69 +1,68 @@
-import React, {useEffect, useState} from 'react';
+import {useState, useContext} from 'react';
 import {
   ChakraProvider,
   Box,
   Text,
-  Link,
   VStack,
-  Code,
   Grid,
   Image,
   Button
 } from '@chakra-ui/react';
-import { useDispatch, useSelector } from "react-redux";
-import { connect } from "./redux/blockchain/blockchainActions";
-import { fetchData } from "./redux/data/dataActions";
 import '@fontsource/arbutus'
 import theme from "./theme"
 import hg from './assets/hive_cropped.gif'
+import { ethers } from 'ethers'
+import { Web3Context } from "./web3";
+import whitelist from './merkle/whitelist'
+import SmartContractABI from "./artifacts/contracts/Zombeez.sol/Zombeez.json";
+const { MerkleTree } = require("merkletreejs");
+const keccak256 = require('keccak256')
 
 function App() {
-  const dispatch = useDispatch();
-  const blockchain = useSelector((state) => state.blockchain);
-  const data = useSelector((state) => state.data);
-  const [feedback, setFeedback] = useState(".025 Mint Price");
-  const [claimingNft, setClaimingNft] = useState(false);
+  const [feedback, setFeedback] = useState("Welcome to Zombeez, a collection of 8335 pixelated spooky beez!");
+  const { account, connectWeb3, provider } = useContext(Web3Context)
 
-  const claimNFTs = (_amount) => {
+  const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+  const contract = new ethers.Contract(contractAddress, SmartContractABI, provider.getSigner())
+
+  // Checking Merkle if address is eleigible
+  const merkle = () => {
+    const buf2hex = x => '0x' + x.toString('hex')
+    const leaves = whitelist.map(x => keccak256(x))
+    const tree = new MerkleTree(leaves, keccak256);
+    const leaf = keccak256(account)
+    const hexProof = tree.getProof(leaf).map(x => buf2hex(x.data))
+    const positions = tree.getProof(leaf).map(x => x.position === 'right' ? 1 : 0)
+    contract.functions.verifyWhitelist(hexProof, positions)
+    .then((values) => {
+      if (values[0] === true) {
+        return true;
+      } else {
+        return false;
+        }
+    })
+  }
+
+  const mintForTokenHolders = (_amount) => {
     if (_amount <= 0) {
-      return;
+        return;
+    }
+    if (!merkle) {
+        setFeedback("Not on the whitelist, sorry")
+        return;
     }
     setFeedback("Minting your Zombeez...");
-    setClaimingNft(true);
-    blockchain.smartContract.methods
-      .mintNFTs(_amount)
-      .send({
-        gasLimit: (285000 * _amount).toString(),
-        to: "0x151f56881146f5bda180f38111e89b8e28b0b954",
-        from: blockchain.account,
-        value: blockchain.web3.utils.toWei(
-          (0.025 * _amount).toString(),
-          "ether"
-        ),
-      })
+    contract.functions.mintForTokenHolder(_amount)
       .once("error", (err) => {
         console.log(err);
         setFeedback(
           "Sorry, something went wrong please try again later or contact support"
         );
-        setClaimingNft(false);
       })
       .then((receipt) => {
         setFeedback("You now own a Zombee! go visit Opensea.io to view it.");
-        setClaimingNft(false);
-        dispatch(fetchData(blockchain.account));
       });
   };
-
-  const getData = () => {
-    if (blockchain.account !== "" && blockchain.smartContract !== null) {
-      dispatch(fetchData(blockchain.account));
-    }
-  };
-
-  useEffect(() => {
-    getData();
-  }, [blockchain.account]);
 
   return (
     <ChakraProvider theme={theme}>
@@ -71,30 +70,19 @@ function App() {
         <Grid minH="100vh" p={3}>
           <VStack spacing={50}>
             <Image src={hg} htmlHeight="600" htmlWidth="700"/>
-            {blockchain.account === "" ||
-             blockchain.smartContract === null ? (
-              <>
-            <Button width="20%" 
-              onClick={(e) => {
-                e.preventDefault();
-                dispatch(connect());
-                getData();
-              }}
-              >Connect to MetaMask</Button>
-              </> 
+            {account == null ? (
+            <button onClick={connectWeb3}>Connect to Metamask</button>
               ) : (
                 <>
+              <Button width="35%" 
+                onClick={mintForTokenHolders}
+              >Claim Free Zombee! (Dizzy Dragon and CryptoToadz only)</Button>
               <Button width="20%" 
-                disabled={claimingNft ? 1 : 0}
-                onClick={(e) => {
-                  e.preventDefault();
-                  claimNFTs(1);
-                  getData();
-                }}
+                onClick={mintForTokenHolders}
               >Mint 1 Zombee for .03 ETH</Button>
                 </>
               )}
-          <Text>Welcome to Zombeez, a collection of 8335 pixelated spooky beez!</Text>
+          <Text>{feedback}</Text>
           </VStack>
         </Grid>
       </Box>
